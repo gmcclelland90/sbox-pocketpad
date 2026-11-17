@@ -1,0 +1,6 @@
+{
+  "title": "Custom Controls Demo",
+  "subtitle": "A theme that adds its own control type",
+  "script": "controls.js",
+  "colors": { "accent": "#7ce0ff", "accentText": "#0b1320" }
+}

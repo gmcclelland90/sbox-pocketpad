@@ -1,0 +1,21 @@
+# Run a PocketPad server locally:  docker compose up -d
+# Then point your game at http://localhost:8080 and open the printed join link on a phone.
+services:
+  pocketpad:
+    image: ghcr.io/gmcclelland90/sbox-pocketpad:latest
+    # To build from source instead of pulling: comment out "image" above and uncomment this.
+    # build: ./server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # The address phones use. Inside Docker the server can't see your LAN IP, so set it here,
+      # e.g. http://192.168.1.20:8080 for home testing or https://pad.example.com in production.
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      # Optional: comma-separated keys games must send to create sessions (recommended in production).
+      HOST_KEYS: ${HOST_KEYS:-}
+      DEFAULT_THEME: ${DEFAULT_THEME:-default}
+      MAX_PLAYERS: ${MAX_PLAYERS:-16}
+    volumes:
+      # Each subfolder is a theme (theme.json + assets). See docs/theming.md.
+      - ./themes:/themes:ro

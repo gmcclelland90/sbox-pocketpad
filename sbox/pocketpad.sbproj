@@ -1,0 +1,24 @@
+{
+  "Title": "PocketPad",
+  "Type": "library",
+  "Org": "local",
+  "Ident": "pocketpad",
+  "Schema": 1,
+  "IncludeSourceFiles": true,
+  "Resources": null,
+  "PackageReferences": [],
+  "EditorReferences": null,
+  "Mounts": null,
+  "IsStandaloneOnly": false,
+  "Metadata": {
+    "Compiler": {
+      "RootNamespace": "PocketPad",
+      "DefineConstants": "SANDBOX;ADDON;DEBUG",
+      "NoWarn": "1701;1702;1591;"
+    },
+    "Summary": "Phones as game controllers, with a self-hostable server",
+    "Description": "Let players join your game from their phone browser and play with buttons, joysticks, d-pads, swipes, tilt, text, drawing and more. Fully customisable layouts and themes. Server: https://github.com/gmcclelland90/sbox-pocketpad",
+    "Public": true,
+    "ReplaceTags": "phone controller mobile party juicebox gamepad"
+  }
+}

@@ -1,0 +1,13 @@
+/* Paper theme: cut-out card buttons with a hard offset shadow. */
+:root { color-scheme: light; }
+body { background-image: radial-gradient(rgba(0,0,0,0.05) 1px, transparent 1px); background-size: 14px 14px; }
+button, .dpad-dir, .chip, #timer, .el-touchpad, .el-swipe, .choice-option, input, textarea {
+	border: 3px solid #2b2420 !important;
+	box-shadow: 4px 4px 0 #2b2420 !important;
+}
+.el-button.pressed, .dpad-dir.pressed { transform: translate(3px, 3px) !important; box-shadow: 1px 1px 0 #2b2420 !important; }
+.el-button:nth-child(odd) { rotate: -0.6deg; }
+.el-button:nth-child(even) { rotate: 0.6deg; }
+#title { font-weight: 900; }
+.stick-base { box-shadow: 0 0 0 3px #2b2420 inset, 4px 4px 0 #2b2420; }
+.stick-knob { border: 3px solid #2b2420; }

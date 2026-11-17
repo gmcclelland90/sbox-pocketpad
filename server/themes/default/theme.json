@@ -1,0 +1,17 @@
+{
+  "title": "PocketPad",
+  "subtitle": "Join the game on the big screen",
+  "colors": {
+    "bg": "#15131a",
+    "surface": "#221f2b",
+    "text": "#f7f4ee",
+    "muted": "#a59fb0",
+    "accent": "#ffd23f",
+    "accentText": "#1b1720",
+    "button": "#2f2a3b",
+    "buttonText": "#f7f4ee",
+    "border": "#3a3447",
+    "danger": "#ff5a5f",
+    "success": "#4cd17a"
+  }
+}

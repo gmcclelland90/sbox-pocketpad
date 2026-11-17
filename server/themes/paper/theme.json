@@ -1,0 +1,29 @@
+{
+  "title": "Paper Party",
+  "subtitle": "Grab your phone, it's your controller",
+  "logo": "logo.svg",
+  "hideTitle": true,
+  "colors": {
+    "bg": "#f5eedc",
+    "surface": "#fffaf0",
+    "text": "#2b2420",
+    "muted": "#7a6d60",
+    "accent": "#e8574f",
+    "accentText": "#ffffff",
+    "button": "#fffaf0",
+    "buttonText": "#2b2420",
+    "border": "#d9cbb0",
+    "danger": "#c8372d",
+    "success": "#3f9c55"
+  },
+  "radius": 10,
+  "font": "\"Trebuchet MS\", \"Comic Sans MS\", system-ui, sans-serif",
+  "stylesheet": "paper.css",
+  "text": {
+    "codeLabel": "Room code",
+    "nameLabel": "What should we call you?",
+    "joinButton": "Let's go!",
+    "joined": "You're in!",
+    "watch": "Eyes on the TV."
+  }
+}

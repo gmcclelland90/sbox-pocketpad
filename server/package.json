@@ -1,0 +1,20 @@
+{
+  "name": "pocketpad-server",
+  "version": "0.1.0",
+  "description": "Self-hostable server and phone controller page for PocketPad",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": { "pocketpad-server": "src/index.js" },
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test test/*.test.js",
+    "demo": "node tools/demo-host.js"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "ws": "^8.18.0"
+  }
+}

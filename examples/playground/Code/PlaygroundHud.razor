@@ -1,0 +1,45 @@
+@using Sandbox;
+@using Sandbox.UI;
+@using PocketPad;
+@inherits PanelComponent
+@namespace Playground
+
+<root>
+	<div class="card join">
+		@if ( Session?.Code is null )
+		{
+			<div class="label">@(Session?.State == PadState.Reconnecting ? "Can't reach the PocketPad server, retrying..." : "Connecting to PocketPad...")</div>
+			<div class="small">@PadHost.Current?.ServerUrl</div>
+		}
+		else
+		{
+			<img class="qr" src="@Session.QrCodeUrl" />
+			<div class="label">Join on your phone</div>
+			<div class="host">@Session.JoinHost</div>
+			<div class="code">@Session.Code</div>
+		}
+	</div>
+
+	<div class="card players">
+		<div class="label">Mode: @Game?.ModeName  (press 1-6)</div>
+		@if ( Session is not null )
+		{
+			@foreach ( var p in Session.Players )
+			{
+				<div class="player @(p.IsConnected ? "" : "away")">
+					<div class="swatch" style="background-color: @p.ColorHex"></div>
+					<div class="name">@p.Name</div>
+					<div class="input">@Game?.LastInput( p )</div>
+				</div>
+			}
+		}
+	</div>
+</root>
+
+@code
+{
+	PadSession Session => PadHost.Current?.Session;
+	PlaygroundGame Game => PlaygroundGame.Instance;
+
+	protected override int BuildHash() => HashCode.Combine( Session?.Code, Session?.State, Game?.Version, Session?.Players.Count );
+}

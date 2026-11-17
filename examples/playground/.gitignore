@@ -1,0 +1,7 @@
+.sbox/
+obj/
+bin/
+*.csproj
+*.slnx
+*.sln
+Libraries/pocketpad/

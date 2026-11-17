@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 140">
+  <g font-family="Trebuchet MS, sans-serif" font-weight="900" text-anchor="middle">
+    <rect x="30" y="18" width="260" height="104" rx="10" fill="#2b2420" transform="translate(6 6) rotate(-3 160 70)"/>
+    <rect x="30" y="18" width="260" height="104" rx="10" fill="#e8574f" stroke="#2b2420" stroke-width="5" transform="rotate(-3 160 70)"/>
+    <text x="160" y="66" font-size="40" fill="#fffaf0" transform="rotate(-3 160 70)">PAPER</text>
+    <text x="160" y="106" font-size="40" fill="#f5c33b" transform="rotate(-3 160 70)">PARTY</text>
+  </g>
+</svg>

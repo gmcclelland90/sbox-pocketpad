@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+	<meta name="theme-color" content="#15131a">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="mobile-web-app-capable" content="yes">
+	<title>PocketPad</title>
+	<link rel="stylesheet" href="/pad.css">
+	<link id="theme-stylesheet" rel="stylesheet" href="data:text/css,">
+	<style id="theme-css"></style>
+</head>
+<body>
+	<main id="join" class="screen join">
+		<div class="brand">
+			<img id="logo" class="logo" alt="" hidden>
+			<h1 id="join-title">PocketPad</h1>
+			<p id="join-subtitle" class="muted"></p>
+		</div>
+		<form id="join-form" autocomplete="off" novalidate>
+			<label><span id="code-label">Room code</span>
+				<input id="code" name="code" inputmode="text" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="4" placeholder="ABCD" required>
+			</label>
+			<label><span id="name-label">Your name</span>
+				<input id="name" name="name" maxlength="20" autocorrect="off" spellcheck="false" placeholder="Name" required>
+			</label>
+			<button id="join-button" type="submit" class="big primary">Join</button>
+			<p id="join-error" class="error" role="alert" hidden></p>
+		</form>
+		<p id="powered" class="powered">Powered by PocketPad</p>
+	</main>
+
+	<main id="game" class="screen game" hidden>
+		<header id="topbar">
+			<span id="me" class="chip"><i id="me-dot"></i><span id="me-name"></span><b id="me-badge" hidden></b></span>
+			<span id="round" class="muted"></span>
+			<span id="timer" hidden></span>
+		</header>
+		<section id="heading">
+			<h2 id="title"></h2>
+			<p id="subtitle" class="muted"></p>
+		</section>
+		<section id="elements"></section>
+		<div id="status" class="status" hidden></div>
+		<button id="motion" class="big primary motion" type="button" hidden>Tap to enable motion controls</button>
+	</main>
+
+	<div id="flash" aria-hidden="true"></div>
+	<div id="toast" role="status" hidden></div>
+
+	<script src="/pad.js"></script>
+	<script src="/elements.js"></script>
+	<script>PocketPad.start();</script>
+</body>
+</html>

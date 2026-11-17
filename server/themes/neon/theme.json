@@ -1,0 +1,20 @@
+{
+  "title": "NEON ARCADE",
+  "subtitle": "Insert phone to continue",
+  "colors": {
+    "bg": "#07060d",
+    "surface": "#120f22",
+    "text": "#e9fbff",
+    "muted": "#7f8db3",
+    "accent": "#19f0ff",
+    "accentText": "#07060d",
+    "button": "#160f2e",
+    "buttonText": "#e9fbff",
+    "border": "#ff2bd6",
+    "danger": "#ff2b5e",
+    "success": "#39ff88"
+  },
+  "radius": 4,
+  "font": "\"Courier New\", ui-monospace, monospace",
+  "css": ".brand h1{text-shadow:0 0 12px var(--accent),0 0 32px var(--accent);letter-spacing:.08em}.el-button,.dpad-dir{box-shadow:0 0 0 2px var(--border) inset,0 0 18px rgba(255,43,214,.45)!important}.el-button.pressed{box-shadow:0 0 0 2px var(--accent) inset,0 0 30px var(--accent)!important;transform:none!important}"
+}
