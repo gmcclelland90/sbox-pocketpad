@@ -45,6 +45,12 @@ public sealed class PadSession : IDisposable
 {
 	public const int ProtocolVersion = 1;
 
+	/// <summary>
+	/// Largest message the game accepts from the server (drawings arrive as PNG data URLs).
+	/// s&box's WebSocket allows 4 KiB to 4 MiB; anything outside that throws in the constructor.
+	/// </summary>
+	public const int MaxMessageBytes = 4 * 1024 * 1024;
+
 	public PadSession( string serverUrl, PadSessionOptions options = null )
 	{
 		ServerUrl = (serverUrl ?? "http://localhost:8080").TrimEnd( '/' );
@@ -144,7 +150,18 @@ public sealed class PadSession : IDisposable
 		if ( _disposed || State == PadState.Ended ) return;
 		State = _hostToken == null ? PadState.Connecting : PadState.Reconnecting;
 
-		var socket = new WebSocket( 8 * 1024 * 1024 );
+		WebSocket socket;
+		try
+		{
+			socket = new WebSocket( MaxMessageBytes );
+		}
+		catch ( Exception e )
+		{
+			// Don't let this escape: it would fault Start() and leave the session stuck in Connecting.
+			Post( () => SetEnded( $"Couldn't create a WebSocket: {e.Message}" ) );
+			return;
+		}
+
 		socket.OnMessageReceived += msg => OnSocketMessage( socket, msg );
 		socket.OnDisconnected += ( status, reason ) => OnSocketClosed( socket, status, reason );
 		_socket?.Dispose();
