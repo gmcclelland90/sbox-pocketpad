@@ -41,6 +41,13 @@ public sealed class PadScreen
 	/// <summary>Send shakes as input from element "$shake".</summary>
 	public bool Shake { get; set; }
 
+	/// <summary>
+	/// Seconds after this screen appears during which the phone ignores taps on its controls (up to 3). Use it when
+	/// a screen replaces one players were hammering, so a leftover tap can't hit a button that just appeared there
+	/// (e.g. NEXT / PAUSE after a mashing game). Sensors aren't affected.
+	/// </summary>
+	public float InputDelay { get; set; }
+
 	public List<PadElement> Elements { get; set; } = new();
 
 	public PadScreen() { }
@@ -69,6 +76,7 @@ public sealed class PadScreen
 		PadJson.Set( o, "layout", Layout );
 		if ( Scroll ) o["scroll"] = true;
 		PadJson.Set( o, "background", Background );
+		if ( InputDelay > 0 ) o["inputDelay"] = (int)MathF.Round( MathF.Min( InputDelay, 3f ) * 1000 );
 		if ( Tilt || Shake )
 		{
 			var sensors = new JsonObject();
