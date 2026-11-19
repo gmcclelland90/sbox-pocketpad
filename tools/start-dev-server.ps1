@@ -1,19 +1,22 @@
 # Starts a PocketPad server for local development on your network (plain http).
 #
-#   powershell -ExecutionPolicy Bypass -File tools\start-dev-server.ps1 [-Port 8080] [-MaxPlayers 100] [-Theme paper]
+#   powershell -ExecutionPolicy Bypass -File tools\start-dev-server.ps1 [-Port 8080] [-MaxPlayers 100] [-Theme paper] [-RequireAuth]
 #
 # - Installs the server's dependencies on first run.
 # - Stops early with a clear message if the port is already taken.
 # - Works out this PC's LAN address so phones get a link they can open (PUBLIC_URL).
 # - Phones join at http://<LAN IP>:<port>; your s&box game connects to http://localhost:<port>
 #   (s&box only allows loopback on ports 80/443/8080/8443, and no raw IPs).
+# -RequireAuth turns on SBOX_AUTH: only games that send an s&box auth token (PadSessionOptions.SendAuthToken) can
+# create sessions. Off by default for LAN testing, since the check needs Facepunch reachable over the internet.
 # Any PUBLIC_URL / MAX_PLAYERS / HOST_KEYS / ... already set in your environment wins over the defaults here.
 # Some mobile browsers (e.g. Edge) force https and can't open a plain http LAN address: type the http:// prefix,
 # turn off the browser's automatic https upgrade, or use Chrome. Ctrl+C stops the server.
 param(
     [int]$Port = 8080,
     [int]$MaxPlayers = 100,
-    [string]$Theme = ""
+    [string]$Theme = "",
+    [switch]$RequireAuth
 )
 $ErrorActionPreference = "Stop"
 
@@ -40,11 +43,13 @@ if (-not $env:PUBLIC_URL) {
 $env:PORT = "$Port"
 if (-not $env:MAX_PLAYERS) { $env:MAX_PLAYERS = "$MaxPlayers" }
 if ($Theme -and -not $env:DEFAULT_THEME) { $env:DEFAULT_THEME = $Theme }
+if ($RequireAuth) { $env:SBOX_AUTH = "true" }
 
 Write-Host ""
 Write-Host "  Phones join at:   $($env:PUBLIC_URL)" -ForegroundColor Green
 Write-Host "  Game connects to: http://localhost:$Port"
 Write-Host "  Max phones/room:  $($env:MAX_PLAYERS)"
+Write-Host "  s&box auth:       $(if ($env:SBOX_AUTH -match '^(1|true|yes)$') { 'required' } else { 'off' })"
 Write-Host "  Ctrl+C to stop."
 Write-Host ""
 
