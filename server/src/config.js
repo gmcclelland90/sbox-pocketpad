@@ -34,6 +34,13 @@ export function loadConfig(overrides = {}) {
 		publicUrl: (process.env.PUBLIC_URL || "").replace(/\/+$/, ""),
 		/** Optional comma-separated host keys. When set, games must pass one to create a session. */
 		hostKeys: list("HOST_KEYS"),
+		/**
+		 * Require games to prove they're a real s&box player (s&box auth tokens) before creating a session.
+		 * Off by default, so local testing works without Steam. Resuming a session never needs it.
+		 */
+		sboxAuth: /^(1|true|yes)$/i.test(process.env.SBOX_AUTH || ""),
+		/** Facepunch's token check endpoint. Only change it for testing. */
+		sboxAuthUrl: process.env.SBOX_AUTH_URL || "https://public.facepunch.com/sbox/auth/token",
 		/** Theme used when a game doesn't pick one, and for the plain join page. */
 		defaultTheme: process.env.DEFAULT_THEME || "default",
 		/** Extra theme folders (each subfolder is a theme). Mount your branding here in Docker. */
