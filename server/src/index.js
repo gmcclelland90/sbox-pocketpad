@@ -12,6 +12,7 @@ import { loadConfig } from "./config.js";
 import { SessionManager, normaliseCode } from "./session.js";
 import { ThemeStore } from "./themes.js";
 import { authFromRequest, verifySboxToken } from "./sboxauth.js";
+import { RateLimiter } from "./ratelimit.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const VERSION = JSON.parse(fs.readFileSync(path.join(here, "..", "package.json"), "utf8")).version;
@@ -63,6 +64,33 @@ export function createServer(overrides = {}) {
 	const themes = new ThemeStore({ dirs: [config.builtinThemesDir, config.themesDir], defaultTheme: config.defaultTheme, log });
 	const sessions = new SessionManager({ config, log, resolveTheme: (t) => themes.compose(t) });
 	const inDocker = fs.existsSync("/.dockerenv");
+	const createLimiter = new RateLimiter({ limit: config.createRateLimit });
+	const joinLimiter = new RateLimiter({ limit: config.joinRateLimit });
+	const TOO_MANY_TRIES = "Too many wrong codes from your network. Wait a minute and try again.";
+
+	/** The address a request came from: the socket's peer, or the proxy's X-Forwarded-For when trusted. */
+	function clientIp(req) {
+		let ip = req.socket?.remoteAddress ?? "";
+		if (config.trustProxy) {
+			// Proxies append the address they saw, so the last entry is the one our proxy vouches for.
+			const forwarded = String(req.headers["x-forwarded-for"] ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+			if (forwarded.length) ip = forwarded[forwarded.length - 1];
+		}
+		return ip.startsWith("::ffff:") ? ip.slice(7) : ip;
+	}
+
+	/**
+	 * Look up a room by code, counting misses against the caller's address. Once an address has
+	 * missed too often it gets nothing back, even for real codes, until its minute is up.
+	 * Returns the session, null for no such room, or "limited".
+	 */
+	function lookupSession(req, code) {
+		const ip = clientIp(req);
+		if (joinLimiter.blocked(ip)) return "limited";
+		const s = sessions.get(code);
+		if (!s) joinLimiter.hit(ip);
+		return s;
+	}
 
 	/** The base URL phones should open, as seen from this request. */
 	function baseUrl(req) {
@@ -129,7 +157,8 @@ export function createServer(overrides = {}) {
 
 		let m = p.match(/^\/api\/v1\/sessions\/([A-Za-z]{4})$/);
 		if (m) {
-			const s = sessions.get(m[1]);
+			const s = lookupSession(req, m[1]);
+			if (s === "limited") return json(res, 429, { error: TOO_MANY_TRIES });
 			if (!s) return json(res, 404, { exists: false });
 			return json(res, 200, { exists: true, code: s.code, lobbyOpen: s.lobbyOpen, players: s.players.size, maxPlayers: s.maxPlayers, theme: s.theme });
 		}
@@ -185,7 +214,7 @@ export function createServer(overrides = {}) {
 			});
 			ws.on("error", () => { });
 			if (url.pathname === "/ws/host") onHost(ws, url, req);
-			else onPhone(ws, url);
+			else onPhone(ws, url, req);
 		});
 	});
 
@@ -204,23 +233,30 @@ export function createServer(overrides = {}) {
 		const key = url.searchParams.get("key") ?? "";
 		if (config.hostKeys.length && !config.hostKeys.includes(key)) return reject(ws, "This server needs a host key.", 4003);
 
-		let session = sessions.byHostToken(url.searchParams.get("resume"));
-		const resumed = !!session;
+		const resume = url.searchParams.get("resume");
+		let session = sessions.byHostToken(resume);
 		let steamId = null;
-		if (!session && config.sboxAuth) {
-			const auth = authFromRequest(req);
-			const result = await verifySboxToken(auth, { url: config.sboxAuthUrl });
-			if (ws.readyState !== ws.OPEN) return;
-			if (result === "unavailable") {
-				// Not the game's fault. Close without an error so the library retries with a fresh token.
-				log.warn("s&box auth check failed: couldn't reach " + config.sboxAuthUrl);
-				return ws.close(1013, "auth check unavailable");
+		if (!session) {
+			// Check the limit before asking Facepunch, so nobody can make us spam their auth endpoint.
+			if (!createLimiter.hit(clientIp(req))) {
+				return reject(ws, "Too many new sessions from this address. Wait a minute and try again.", 4029);
 			}
-			if (result !== "ok") return reject(ws, "This server only accepts games signed in to s&box. Turn on Send Auth Token on the PocketPad Host.", 4003);
-			steamId = auth.steamId;
-			// Someone else may have resumed or created in the meantime; look again.
-			session = sessions.byHostToken(url.searchParams.get("resume"));
+			if (config.sboxAuth) {
+				const auth = authFromRequest(req);
+				const result = await verifySboxToken(auth, { url: config.sboxAuthUrl });
+				if (ws.readyState !== ws.OPEN) return;
+				if (result === "unavailable") {
+					// Not the game's fault. Close without an error so the library retries with a fresh token.
+					log.warn("s&box auth check failed: couldn't reach " + config.sboxAuthUrl);
+					return ws.close(1013, "auth check unavailable");
+				}
+				if (result !== "ok") return reject(ws, "This server only accepts games signed in to s&box. Turn on Send Auth Token on the PocketPad Host.", 4003);
+				steamId = auth.steamId;
+				// Someone else may have resumed or created in the meantime; look again.
+				session = sessions.byHostToken(resume);
+			}
 		}
+		const resumed = !!session;
 		if (!session) {
 			session = sessions.create({
 				theme: url.searchParams.get("theme") || null,
@@ -244,8 +280,9 @@ export function createServer(overrides = {}) {
 		ws.on("error", () => { });
 	}
 
-	function onPhone(ws, url) {
-		const s = sessions.get(url.searchParams.get("code"));
+	function onPhone(ws, url, req) {
+		const s = lookupSession(req, url.searchParams.get("code"));
+		if (s === "limited") return reject(ws, TOO_MANY_TRIES, 4029);
 		if (!s) return reject(ws, "No game with that code. Check the code on the TV.");
 		const result = s.joinPlayer(ws, { name: url.searchParams.get("name"), token: url.searchParams.get("token") });
 		if (result.error) return reject(ws, result.error);
@@ -263,6 +300,8 @@ export function createServer(overrides = {}) {
 			ws.isAlive = false;
 			try { ws.ping(); } catch { }
 		}
+		createLimiter.sweep();
+		joinLimiter.sweep();
 	}, 20_000);
 
 	function close() {

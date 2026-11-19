@@ -62,6 +62,14 @@ export function loadConfig(overrides = {}) {
 		maxBufferedKb: int("MAX_BUFFERED_KB", 4096),
 		/** Inputs per second a single phone may send before extras are dropped. */
 		playerRateLimit: int("PLAYER_RATE_LIMIT", 120),
+		/** New sessions per minute from one IP address (0 = no limit). */
+		createRateLimit: int("CREATE_RATE_LIMIT", 10),
+		/**
+		 * Wrong room codes per minute from one IP address before that address is refused for the rest of
+		 * the minute (0 = no limit). Stops anyone scanning for live rooms. Players on the same Wi-Fi share
+		 * an address, but only mistyped codes count, so normal joins and reconnects never use it up.
+		 */
+		joinRateLimit: int("JOIN_RATE_LIMIT", 30),
 		/** Trust X-Forwarded-* headers (set when behind a reverse proxy). */
 		trustProxy: /^(1|true|yes)$/i.test(process.env.TRUST_PROXY || ""),
 		logLevel: process.env.LOG_LEVEL || "info",
