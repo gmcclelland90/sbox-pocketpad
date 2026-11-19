@@ -29,6 +29,11 @@ PORT=8080 PUBLIC_URL=https://pad.example.com node src/index.js
 
 Needs Node 20 or newer.
 
+For local development, `tools/start-dev-server.ps1` (Windows) or `tools/start-dev-server.sh` (macOS / Linux) does
+the setup for you: installs dependencies on first run, refuses to start if the port is taken, sets `PUBLIC_URL` to
+your LAN address and prints where phones join. Plain `npm start` also works on a LAN: when a game connects through
+`localhost`, the server hands phones its LAN address instead.
+
 ## Settings
 
 | Variable | Default | Meaning |
@@ -40,7 +45,7 @@ Needs Node 20 or newer.
 | `DEFAULT_THEME` | `default` | Theme for the plain join page and for games that don't pick one |
 | `THEMES_DIR` | `/themes` | Folder of extra themes |
 | `MAX_SESSIONS` | `500` | Concurrent sessions |
-| `MAX_PLAYERS` | `16` | Players per session (games can ask for fewer) |
+| `MAX_PLAYERS` | `100` | Phones per session, players and spectators/audience together (games can ask for fewer with `MaxPlayers`) |
 | `HOST_GRACE_SECONDS` | `120` | How long a session survives without its game connected |
 | `MAX_MESSAGE_KB` | `1024` | Biggest message (drawings are sent as PNGs) |
 | `PLAYER_RATE_LIMIT` | `120` | Inputs per second per phone before extras are dropped |

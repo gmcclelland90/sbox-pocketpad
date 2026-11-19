@@ -15,7 +15,8 @@ services:
       # Optional: comma-separated keys games must send to create sessions (recommended in production).
       HOST_KEYS: ${HOST_KEYS:-}
       DEFAULT_THEME: ${DEFAULT_THEME:-default}
-      MAX_PLAYERS: ${MAX_PLAYERS:-16}
+      # Most phones per session, players and any audience together (games can ask for fewer).
+      MAX_PLAYERS: ${MAX_PLAYERS:-100}
     volumes:
       # Each subfolder is a theme (theme.json + assets). See docs/theming.md.
       - ./themes:/themes:ro
