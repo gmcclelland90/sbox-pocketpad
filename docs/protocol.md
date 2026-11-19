@@ -101,7 +101,8 @@ The server answers `welcome` (`code`, `token`, `rejoin`, `id`, `name`, `slot`, `
 ended/kicked/replaced). Phones send `{type:"input", el, ev, …}`, `{type:"ping"}` and `{type:"leave"}`.
 
 Store `token` and pass it when reconnecting to come back as the same player, even when the lobby is
-closed. Close codes: 4000 replaced by a newer connection, 4001 ended or kicked, 4004 rejected.
+closed. Close codes: 4000 replaced by a newer connection, 4001 ended or kicked, 4004 rejected. A connection that stops reading and falls more than `MAX_BUFFERED_KB` behind is cut off
+(no close frame); reconnect as usual.
 
 ## HTTP
 

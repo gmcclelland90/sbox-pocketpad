@@ -37,8 +37,18 @@ export function cleanName(name) {
 	return name.replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim().slice(0, MAX_NAME);
 }
 
-function send(socket, message) {
+/**
+ * Send to a socket. A socket whose unsent backlog is over its `maxBuffered` bytes (a phone on bad
+ * Wi-Fi, a frozen game) is dropped instead of letting the backlog grow in memory. Phones reconnect
+ * and get their current screen; a game resumes its session.
+ */
+export function send(socket, message) {
 	if (!socket || socket.readyState !== 1) return false;
+	if (socket.bufferedAmount > (socket.maxBuffered ?? Infinity)) {
+		socket.overflowed = true;
+		try { socket.terminate(); } catch { }
+		return false;
+	}
 	try {
 		socket.send(typeof message === "string" ? message : JSON.stringify(message));
 		return true;

@@ -48,6 +48,11 @@ export function loadConfig(overrides = {}) {
 		hostGraceSeconds: int("HOST_GRACE_SECONDS", 120),
 		/** Biggest single message, in KB. Drawings are sent as PNG data URLs, so keep this roomy. */
 		maxMessageKb: int("MAX_MESSAGE_KB", 1024),
+		/**
+		 * Most unsent data, in KB, the server holds for one connection before dropping it. Stops a phone on
+		 * bad Wi-Fi (or a frozen game) from piling up messages in memory. It reconnects and catches up.
+		 */
+		maxBufferedKb: int("MAX_BUFFERED_KB", 4096),
 		/** Inputs per second a single phone may send before extras are dropped. */
 		playerRateLimit: int("PLAYER_RATE_LIMIT", 120),
 		/** Trust X-Forwarded-* headers (set when behind a reverse proxy). */

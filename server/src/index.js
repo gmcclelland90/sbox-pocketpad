@@ -177,6 +177,10 @@ export function createServer(overrides = {}) {
 		wss.handleUpgrade(req, socket, head, (ws) => {
 			ws.isAlive = true;
 			ws.on("pong", () => (ws.isAlive = true));
+			ws.maxBuffered = config.maxBufferedKb * 1024;
+			ws.on("close", () => {
+				if (ws.overflowed) log.warn(`dropped a ${url.pathname === "/ws/host" ? "game" : "phone"} connection that fell more than ${config.maxBufferedKb} KB behind`);
+			});
 			if (url.pathname === "/ws/host") onHost(ws, url, req);
 			else onPhone(ws, url);
 		});
