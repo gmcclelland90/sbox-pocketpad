@@ -20,6 +20,9 @@ public sealed class PadHost : Component
 	/// <summary>Send an s&box auth token when creating a session. Needed for servers that set SBOX_AUTH. Only use with servers you trust.</summary>
 	[Property] public bool SendAuthToken { get; set; }
 
+	/// <summary>A phone back without its saved token takes back a disconnected player with the same name.</summary>
+	[Property] public bool RejoinByName { get; set; }
+
 	/// <summary>Theme folder on the server ("default", "paper", "neon", or your own).</summary>
 	[Property] public string Theme { get; set; }
 
@@ -61,6 +64,7 @@ public sealed class PadHost : Component
 		{
 			HostKey = HostKey,
 			SendAuthToken = SendAuthToken,
+			RejoinByName = RejoinByName,
 			Theme = Theme,
 			MaxPlayers = MaxPlayers,
 			Debug = DebugLogging,

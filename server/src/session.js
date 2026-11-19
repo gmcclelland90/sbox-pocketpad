@@ -89,12 +89,14 @@ export class Session {
 	 * @param {number} opts.maxPlayers
 	 * @param {import("./index.js").Logger} opts.log
 	 */
-	constructor({ code, theme, maxPlayers, hostGraceMs, playerRateLimit, log, onEnd }) {
+	constructor({ code, theme, maxPlayers, hostGraceMs, playerRateLimit, log, onEnd, rejoinByName = false }) {
 		this.code = code;
 		this.hostToken = randomToken();
 		this.created = Date.now();
 		this.theme = theme;
 		this.maxPlayers = maxPlayers;
+		/** A phone without its token can take back a disconnected player with the same name. */
+		this.rejoinByName = rejoinByName;
 		this.hostGraceMs = hostGraceMs;
 		this.playerRateLimit = playerRateLimit;
 		this.log = log;
@@ -246,7 +248,13 @@ export class Session {
 	joinPlayer(socket, { name, token }) {
 		if (this.ended) return { error: "That game has ended." };
 
-		const existing = token ? [...this.players.values()].find((p) => p.token === token) : null;
+		let existing = token ? [...this.players.values()].find((p) => p.token === token) : null;
+		// Same person back without their token (cleared storage, another browser): give them their player back,
+		// but only a disconnected one, so nobody can take over someone who's still playing.
+		if (!existing && this.rejoinByName) {
+			const wanted = cleanName(name)?.toLowerCase();
+			if (wanted) existing = [...this.players.values()].find((p) => !p.socket && p.name.toLowerCase() === wanted) ?? null;
+		}
 		if (existing) {
 			if (existing.socket && existing.socket !== socket) {
 				existing.replacedSocket = existing.socket;
@@ -392,7 +400,7 @@ export class SessionManager {
 		return this.sessions.size;
 	}
 
-	create({ theme, maxPlayers }) {
+	create({ theme, maxPlayers, rejoinByName = false }) {
 		if (this.sessions.size >= this.config.maxSessions) return null;
 		let code = null;
 		for (let i = 0; i < 50 && !code; i++) {
@@ -404,6 +412,7 @@ export class SessionManager {
 			code,
 			theme: this.resolveTheme(theme),
 			maxPlayers: Math.min(maxPlayers || this.config.maxPlayers, this.config.maxPlayers),
+			rejoinByName,
 			hostGraceMs: this.config.hostGraceSeconds * 1000,
 			playerRateLimit: this.config.playerRateLimit,
 			log: this.log,

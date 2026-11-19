@@ -14,8 +14,9 @@ your LAN address (the server works it out, or set `PUBLIC_URL`). In production u
 ## Starting a session
 
 The easy way is the **PocketPad Host** component (`PadHost`): add it to a GameObject, set **Server Url**,
-optionally **Theme**, **Max Players**, **Host Key** and **Send Auth Token** (for servers that set
-`SBOX_AUTH`, see [self-hosting](self-hosting.md#sbox-auth-tokens)). It connects on play, calls `Poll()` every frame and
+optionally **Theme**, **Max Players**, **Host Key**, **Send Auth Token** (for servers that set
+`SBOX_AUTH`, see [self-hosting](self-hosting.md#sbox-auth-tokens)) and **Rejoin By Name** (a phone back without its
+saved token, e.g. after clearing its browser, takes back its disconnected player of the same name). It connects on play, calls `Poll()` every frame and
 ends the session when destroyed. From your own component:
 
 ```csharp

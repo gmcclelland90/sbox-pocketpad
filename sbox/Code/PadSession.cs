@@ -32,6 +32,12 @@ public sealed class PadSessionOptions
 	/// </summary>
 	public bool SendAuthToken { get; set; }
 
+	/// <summary>
+	/// A phone that comes back without its saved token (cleared storage, a different browser) takes back a
+	/// disconnected player with the same name, instead of joining as "Sam 2". Players still connected are never taken over.
+	/// </summary>
+	public bool RejoinByName { get; set; }
+
 	/// <summary>Reconnect automatically after network blips and server restarts.</summary>
 	public bool AutoReconnect { get; set; } = true;
 
@@ -148,6 +154,7 @@ public sealed class PadSession : IDisposable
 		if ( !string.IsNullOrEmpty( Options.HostKey ) ) q.Add( "key=" + Uri.EscapeDataString( Options.HostKey ) );
 		if ( !string.IsNullOrEmpty( Options.Theme ) ) q.Add( "theme=" + Uri.EscapeDataString( Options.Theme ) );
 		if ( Options.MaxPlayers > 0 ) q.Add( "maxPlayers=" + Options.MaxPlayers );
+		if ( Options.RejoinByName ) q.Add( "rejoinByName=1" );
 		return $"{url}/ws/host?{string.Join( "&", q )}";
 	}
 
