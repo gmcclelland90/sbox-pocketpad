@@ -121,7 +121,8 @@ Steam user running s&box ([auth tokens](https://sbox.game/dev/doc/services/auth-
    the socket with `1013` and the library tries again.
 
 Phones aren't in s&box, so this only applies to games. It works alongside `HOST_KEYS` and the rate limits.
-Leave it off for local testing.
+Leave it off for local testing, or try it with `tools/start-dev-server.ps1 -RequireAuth` (the check needs
+internet access to Facepunch).
 
 ## Health and monitoring
 

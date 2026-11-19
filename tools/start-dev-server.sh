@@ -5,7 +5,8 @@
 #
 # Installs dependencies on first run, refuses to start if the port is taken, and prints the join address.
 # The server works out this machine's LAN address by itself (set PUBLIC_URL to override). Your s&box game
-# connects to http://localhost:<port>. Ctrl+C stops the server.
+# connects to http://localhost:<port>. Set SBOX_AUTH=true to require s&box auth tokens (needs internet access to
+# Facepunch). Ctrl+C stops the server.
 set -eu
 
 PORT="${1:-${PORT:-8080}}"

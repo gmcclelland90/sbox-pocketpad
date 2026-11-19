@@ -23,8 +23,14 @@ public sealed class PadSessionOptions
 	/// <summary>Server theme folder to use ("default", "paper", "neon", or your own).</summary>
 	public string Theme { get; set; }
 
-	/// <summary>0 = server default (16).</summary>
+	/// <summary>0 = server default (MAX_PLAYERS, 100 unless the server sets it).</summary>
 	public int MaxPlayers { get; set; }
+
+	/// <summary>
+	/// Send an s&amp;box auth token and our Steam ID when creating a session. Needed for servers that set
+	/// SBOX_AUTH. Only use with servers you trust: the token proves who you are to that server.
+	/// </summary>
+	public bool SendAuthToken { get; set; }
 
 	/// <summary>Reconnect automatically after network blips and server restarts.</summary>
 	public bool AutoReconnect { get; set; } = true;
@@ -190,7 +196,9 @@ public sealed class PadSession : IDisposable
 		{
 			var get = Sandbox.Services.Auth.GetToken( "pocketpad" );
 			// GetToken ignores cancellation, so don't let a slow backend hold up the connection forever.
-			if ( await Task.WhenAny( get, Task.Delay( 5000 ) ) != get ) return null;
+			// (Task.WhenAny is off limits in s&box's sandbox, so wait in small steps instead.)
+			for ( var waited = 0; !get.IsCompleted && waited < 5000; waited += 100 ) await Task.Delay( 100 );
+			if ( !get.IsCompleted ) return null;
 			var token = await get;
 			if ( string.IsNullOrEmpty( token ) ) return null;
 			return new Dictionary<string, string>
