@@ -212,7 +212,8 @@ export class Session {
 			}
 			case "kick": {
 				const p = this.players.get(msg.id);
-				if (!p) return "unknown player";
+				// Already gone (left, or kicked a moment ago): what the game wanted is already true.
+				if (!p) return null;
 				this.removePlayer(p, typeof msg.reason === "string" ? msg.reason : "You were removed from the game.");
 				return null;
 			}
