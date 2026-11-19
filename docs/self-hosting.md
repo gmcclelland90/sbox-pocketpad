@@ -43,6 +43,7 @@ Needs Node 20 or newer.
 | `MAX_PLAYERS` | `16` | Players per session (games can ask for fewer) |
 | `HOST_GRACE_SECONDS` | `120` | How long a session survives without its game connected |
 | `MAX_MESSAGE_KB` | `1024` | Biggest message (drawings are sent as PNGs) |
+| `MAX_BUFFERED_KB` | `4096` | Most unsent data held for one connection. A phone or game that falls further behind is disconnected and reconnects (phones get their current screen back) |
 | `PLAYER_RATE_LIMIT` | `120` | Inputs per second per phone before extras are dropped |
 | `TRUST_PROXY` | `false` | Use `X-Forwarded-Proto/Host` to build join links |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
