@@ -190,6 +190,25 @@ test("kick removes a player and tells the host", async () => {
 	host.close();
 });
 
+test("joinScreen: newcomers see it first, nobody else's screen changes", async () => {
+	const { host, ready } = await newGame();
+	const a = client(`/ws/play?code=${ready.code}&name=Ann`);
+	await a.next("welcome");
+	host.send({ type: "show", screen: { title: "Lobby" } });
+	assert.equal((await a.next("screen")).screen.title, "Lobby");
+	host.send({ type: "joinScreen", screen: { title: "You're watching" } });
+	const b = client(`/ws/play?code=${ready.code}&name=Ben`);
+	assert.equal((await b.next("welcome")).screen.title, "You're watching");
+	// Ann didn't get a new screen.
+	const none = await Promise.race([a.next("screen").then(() => "screen", () => "none"), new Promise((r) => setTimeout(() => r("none"), 100))]);
+	assert.equal(none, "none");
+	// Clearing it goes back to the default screen for the next newcomer.
+	host.send({ type: "joinScreen", screen: null });
+	const c = client(`/ws/play?code=${ready.code}&name=Cat`);
+	assert.equal((await c.next("welcome")).screen.title, "Lobby");
+	host.close();
+});
+
 test("theme can be picked by name and overridden inline", async () => {
 	const { host, ready } = await newGame("?theme=paper");
 	assert.equal(ready.theme.name, "paper");

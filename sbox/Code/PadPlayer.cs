@@ -34,6 +34,13 @@ public sealed class PadPlayer
 	/// <summary>Your own data (score, pawn, team...).</summary>
 	public object Tag { get; set; }
 
+	/// <summary>
+	/// Watching rather than playing (an audience member, a spectator once the game is full). Purely your game's
+	/// label: the phone doesn't know. <see cref="PadSession.ShowToPlayers"/> and <see cref="PadSession.ShowToSpectators"/>
+	/// use it, so each group keeps its own screens.
+	/// </summary>
+	public bool IsSpectator { get; set; }
+
 	// ------------------------------------------------------------------ live state
 
 	private readonly HashSet<string> _down = new( StringComparer.OrdinalIgnoreCase );
