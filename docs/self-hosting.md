@@ -47,7 +47,9 @@ Needs Node 20 or newer.
 | `MAX_MESSAGE_KB` | `1024` | Biggest message (drawings are sent as PNGs) |
 | `MAX_BUFFERED_KB` | `4096` | Most unsent data held for one connection. A phone or game that falls further behind is disconnected and reconnects (phones get their current screen back) |
 | `PLAYER_RATE_LIMIT` | `120` | Inputs per second per phone before extras are dropped |
-| `TRUST_PROXY` | `false` | Use `X-Forwarded-Proto/Host` to build join links |
+| `CREATE_RATE_LIMIT` | `10` | New sessions per minute from one IP address. `0` turns it off |
+| `JOIN_RATE_LIMIT` | `30` | Wrong room codes per minute from one IP address before it's refused for the rest of the minute. Only misses count, so players on one Wi-Fi joining and reconnecting don't use it up. `0` turns it off |
+| `TRUST_PROXY` | `false` | Use `X-Forwarded-Proto/Host` to build join links, and `X-Forwarded-For` for rate limits |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
 
 ## Home network testing
@@ -82,11 +84,13 @@ location / {
 	proxy_set_header Connection "upgrade";
 	proxy_set_header Host $host;
 	proxy_set_header X-Forwarded-Proto $scheme;
+	proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 	proxy_read_timeout 1h;
 }
 ```
 
-Set `PUBLIC_URL=https://pad.example.com` (or `TRUST_PROXY=true`).
+Set `PUBLIC_URL=https://pad.example.com` (or `TRUST_PROXY=true`). Behind a proxy, also set `TRUST_PROXY=true` so the
+rate limits see each player's real address (from `X-Forwarded-For`) instead of the proxy's.
 
 ## s&box auth tokens
 

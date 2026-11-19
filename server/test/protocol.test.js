@@ -8,7 +8,7 @@ const quiet = { debug() { }, info() { }, warn() { }, error() { } };
 let app, base;
 
 before(async () => {
-	app = createServer({ port: 0, host: "127.0.0.1", log: quiet, themesDir: "/nonexistent", hostGraceSeconds: 1, publicUrl: "http://pad.test" });
+	app = createServer({ port: 0, host: "127.0.0.1", log: quiet, themesDir: "/nonexistent", hostGraceSeconds: 1, publicUrl: "http://pad.test", createRateLimit: 0, joinRateLimit: 0 });
 	const addr = await app.listen();
 	base = `127.0.0.1:${addr.port}`;
 });

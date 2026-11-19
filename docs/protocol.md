@@ -20,7 +20,7 @@ On connect the server sends:
 
 Keep `hostToken`. If the socket drops, reconnect with `resume=<hostToken>` within `HOST_GRACE_SECONDS`
 to get the same session back (`resumed: true`, with the current player list). Otherwise you get a new
-session. A rejected connection gets `{type:"error", message}` and close code 4003 (bad key) or 4029 (full).
+session. A rejected connection gets `{type:"error", message}` and close code 4003 (bad key) or 4029 (server full, or too many new sessions from this IP address).
 
 `PLAYER` is `{ id, name, slot, color, badge, avatar, connected }`.
 
@@ -105,7 +105,8 @@ The server answers `welcome` (`code`, `token`, `rejoin`, `id`, `name`, `slot`, `
 ended/kicked/replaced). Phones send `{type:"input", el, ev, …}`, `{type:"ping"}` and `{type:"leave"}`.
 
 Store `token` and pass it when reconnecting to come back as the same player, even when the lobby is
-closed. Close codes: 4000 replaced by a newer connection, 4001 ended or kicked, 4004 rejected. A connection that stops reading and falls more than `MAX_BUFFERED_KB` behind is cut off
+closed. Close codes: 4000 replaced by a newer connection, 4001 ended or kicked, 4004 rejected, 4029 too many wrong codes
+from this IP address. A connection that stops reading and falls more than `MAX_BUFFERED_KB` behind is cut off
 (no close frame); reconnect as usual.
 
 ## HTTP
@@ -115,7 +116,7 @@ closed. Close codes: 4000 replaced by a newer connection, 4001 ended or kicked, 
 | `/` and `/ABCD` | phone page (the second pre-fills the code) |
 | `/healthz` | `{ok, version, sessions}` |
 | `/api/v1/info` | `{name, version, protocol, hostKeyRequired, defaultTheme, themes, maxPlayers}` |
-| `/api/v1/sessions/ABCD` | `{exists, code, lobbyOpen, players, maxPlayers, theme}` or 404 |
+| `/api/v1/sessions/ABCD` | `{exists, code, lobbyOpen, players, maxPlayers, theme}`, 404, or 429 after too many wrong codes |
 | `/api/v1/themes/NAME` | resolved theme JSON |
 | `/qr/ABCD.svg`, `/qr/ABCD.png?size=512` | QR code of the join link |
 | `/themes/NAME/FILE` | theme assets |
