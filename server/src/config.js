@@ -70,7 +70,12 @@ export function loadConfig(overrides = {}) {
 		 * an address, but only mistyped codes count, so normal joins and reconnects never use it up.
 		 */
 		joinRateLimit: int("JOIN_RATE_LIMIT", 30),
-		/** Trust X-Forwarded-* headers (set when behind a reverse proxy). */
+		/**
+		 * Reverse proxies (IP addresses or CIDR ranges) whose X-Forwarded-* headers we believe. Loopback is
+		 * always trusted. Example for Caddy on the Docker host: 172.16.0.0/12.
+		 */
+		trustedProxies: list("TRUSTED_PROXIES"),
+		/** Old switch: believe X-Forwarded-* from anyone. Prefer TRUSTED_PROXIES. */
 		trustProxy: /^(1|true|yes)$/i.test(process.env.TRUST_PROXY || ""),
 		logLevel: process.env.LOG_LEVEL || "info",
 		...overrides,

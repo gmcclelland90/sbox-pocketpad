@@ -49,7 +49,8 @@ Needs Node 20 or newer.
 | `PLAYER_RATE_LIMIT` | `120` | Inputs per second per phone before extras are dropped |
 | `CREATE_RATE_LIMIT` | `10` | New sessions per minute from one IP address. `0` turns it off |
 | `JOIN_RATE_LIMIT` | `30` | Wrong room codes per minute from one IP address before it's refused for the rest of the minute. Only misses count, so players on one Wi-Fi joining and reconnecting don't use it up. `0` turns it off |
-| `TRUST_PROXY` | `false` | Use `X-Forwarded-Proto/Host` to build join links, and `X-Forwarded-For` for rate limits |
+| `TRUSTED_PROXIES` | (none) | Comma-separated IP addresses or CIDR ranges of your reverse proxies. Their `X-Forwarded-*` headers are believed; loopback always is. See [HTTPS and reverse proxies](#https-and-reverse-proxies) |
+| `TRUST_PROXY` | `false` | Old switch that believes `X-Forwarded-*` headers from anyone. Use `TRUSTED_PROXIES` instead |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
 
 ## Home network testing
@@ -89,8 +90,16 @@ location / {
 }
 ```
 
-Set `PUBLIC_URL=https://pad.example.com` (or `TRUST_PROXY=true`). Behind a proxy, also set `TRUST_PROXY=true` so the
-rate limits see each player's real address (from `X-Forwarded-For`) instead of the proxy's.
+Set `PUBLIC_URL=https://pad.example.com`.
+
+The server believes `X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-For` only from proxies it trusts,
+because anyone can send those headers. A proxy on the same machine (connecting over loopback) is trusted
+automatically. If the proxy reaches the server from another address, list it in `TRUSTED_PROXIES`. The common
+case is Caddy or nginx on the Docker host talking to the PocketPad container, where the container sees the
+Docker bridge address: `TRUSTED_PROXIES=172.16.0.0/12` covers Docker's default networks.
+
+The client's real address is taken from `X-Forwarded-For` by walking from the right past your trusted
+proxies, so a phone can't pretend to be someone else by sending its own header. The rate limits use this address.
 
 ## s&box auth tokens
 
