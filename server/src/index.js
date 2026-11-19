@@ -13,6 +13,7 @@ import { SessionManager, normaliseCode } from "./session.js";
 import { ThemeStore } from "./themes.js";
 import { authFromRequest, verifySboxToken } from "./sboxauth.js";
 import { RateLimiter } from "./ratelimit.js";
+import { ProxyTrust } from "./proxy.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const VERSION = JSON.parse(fs.readFileSync(path.join(here, "..", "package.json"), "utf8")).version;
@@ -64,20 +65,12 @@ export function createServer(overrides = {}) {
 	const themes = new ThemeStore({ dirs: [config.builtinThemesDir, config.themesDir], defaultTheme: config.defaultTheme, log });
 	const sessions = new SessionManager({ config, log, resolveTheme: (t) => themes.compose(t) });
 	const inDocker = fs.existsSync("/.dockerenv");
+	const proxies = new ProxyTrust({ trusted: config.trustedProxies, trustAll: config.trustProxy });
 	const createLimiter = new RateLimiter({ limit: config.createRateLimit });
 	const joinLimiter = new RateLimiter({ limit: config.joinRateLimit });
 	const TOO_MANY_TRIES = "Too many wrong codes from your network. Wait a minute and try again.";
 
-	/** The address a request came from: the socket's peer, or the proxy's X-Forwarded-For when trusted. */
-	function clientIp(req) {
-		let ip = req.socket?.remoteAddress ?? "";
-		if (config.trustProxy) {
-			// Proxies append the address they saw, so the last entry is the one our proxy vouches for.
-			const forwarded = String(req.headers["x-forwarded-for"] ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-			if (forwarded.length) ip = forwarded[forwarded.length - 1];
-		}
-		return ip.startsWith("::ffff:") ? ip.slice(7) : ip;
-	}
+	const clientIp = (req) => proxies.clientIp(req);
 
 	/**
 	 * Look up a room by code, counting misses against the caller's address. Once an address has
@@ -97,7 +90,7 @@ export function createServer(overrides = {}) {
 		if (config.publicUrl) return config.publicUrl;
 		let proto = "http";
 		let host = req.headers.host ?? `localhost:${config.port}`;
-		if (config.trustProxy) {
+		if (proxies.fromProxy(req)) {
 			proto = String(req.headers["x-forwarded-proto"] ?? proto).split(",")[0].trim();
 			host = String(req.headers["x-forwarded-host"] ?? host).split(",")[0].trim();
 		}
@@ -315,7 +308,7 @@ export function createServer(overrides = {}) {
 		return new Promise((resolve) => server.listen(config.port, config.host, () => resolve(server.address())));
 	}
 
-	return { server, wss, sessions, themes, config, log, listen, close };
+	return { server, wss, sessions, themes, config, log, proxies, listen, close };
 }
 
 // Run directly: start listening.
@@ -328,6 +321,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
 		const lan = lanAddress();
 		app.log.info(`Phones join at http://${lan ?? "<this machine's IP>"}:${addr.port} (set PUBLIC_URL to override)`);
 	}
+	if (app.config.trustProxy) app.log.warn("TRUST_PROXY=true believes X-Forwarded-* headers from anyone. Set TRUSTED_PROXIES to your proxy's address instead.");
 	if (app.config.hostKeys.length) app.log.info(`Host keys required (${app.config.hostKeys.length} configured)`);
 	if (app.config.sboxAuth) app.log.info("s&box auth tokens required to create sessions");
 	app.log.info(`Themes: ${app.themes.list().join(", ")}`);
