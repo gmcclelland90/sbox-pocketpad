@@ -50,7 +50,11 @@ export function loadConfig(overrides = {}) {
 		/** Phone web client. */
 		publicDir: path.join(here, "..", "public"),
 		maxSessions: int("MAX_SESSIONS", 500),
-		maxPlayers: int("MAX_PLAYERS", 16),
+		/**
+		 * Most phones in one session (games can ask for fewer). Roomy by default so games with an audience or
+		 * spectators work without configuration; each phone is one small WebSocket.
+		 */
+		maxPlayers: int("MAX_PLAYERS", 100),
 		/** How long a session survives without its game connected. */
 		hostGraceSeconds: int("HOST_GRACE_SECONDS", 120),
 		/** Biggest single message, in KB. Drawings are sent as PNG data URLs, so keep this roomy. */

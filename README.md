@@ -41,7 +41,9 @@ docker run -d --name pocketpad -p 8080:8080 -e PUBLIC_URL=http://YOUR-PC-IP:8080
 ```
 
 `PUBLIC_URL` is the address phones use. For testing on home Wi-Fi, that's your PC's LAN IP
-(`ipconfig` on Windows). Without Docker: `cd server && npm install && npm start` (Node 20+).
+(`ipconfig` on Windows). Without Docker (Node 20+): `powershell -ExecutionPolicy Bypass -File tools\start-dev-server.ps1`
+on Windows or `tools/start-dev-server.sh` elsewhere (installs dependencies, finds your LAN IP, prints the join
+address), or just `cd server && npm install && npm start`.
 More options in [docs/self-hosting.md](docs/self-hosting.md).
 
 Try it without s&box: `cd server && node tools/demo-host.js http://localhost:8080`, then open the
@@ -123,7 +125,7 @@ server/            Node.js server, phone client (public/), built-in themes, test
 sbox/              s&box library (copy to YourGame/Libraries/pocketpad)
 examples/          playground s&box project, and a theme with a custom control
 docs/              protocol, theming, self-hosting, s&box API
-tools/             library install scripts
+tools/             library install scripts, dev server start scripts
 docker-compose.yml one-command local server with a themes folder
 ```
 
