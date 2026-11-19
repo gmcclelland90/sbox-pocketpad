@@ -254,6 +254,7 @@ export function createServer(overrides = {}) {
 			session = sessions.create({
 				theme: url.searchParams.get("theme") || null,
 				maxPlayers: Number(url.searchParams.get("maxPlayers")) || 0,
+				rejoinByName: /^(1|true|yes)$/i.test(url.searchParams.get("rejoinByName") || ""),
 			});
 			if (!session) return reject(ws, "The server is full. Try again later.", 4029);
 			if (steamId) {

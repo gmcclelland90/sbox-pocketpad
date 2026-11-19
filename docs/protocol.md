@@ -5,7 +5,11 @@ engine, or a phone client of your own; the s&box library and the bundled phone p
 
 ## Game (host) socket
 
-`ws(s)://SERVER/ws/host?v=1[&key=HOST_KEY][&theme=NAME][&maxPlayers=N][&resume=HOST_TOKEN]`
+`ws(s)://SERVER/ws/host?v=1[&key=HOST_KEY][&theme=NAME][&maxPlayers=N][&rejoinByName=1][&resume=HOST_TOKEN]`
+
+`rejoinByName=1`: a phone joining without a player token whose name matches a **disconnected** player (ignoring
+case) takes that player back (`welcome` and `join` with `rejoin: true`) instead of joining as "Sam 2". A player
+who's still connected is never taken over.
 
 If the server has `SBOX_AUTH` on, a new session also needs `Authorization: <s&box auth token>` and
 `X-Steam-Id: <64-bit Steam ID>` request headers (not needed with a valid `resume`). A bad token gets close

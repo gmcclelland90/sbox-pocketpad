@@ -199,6 +199,40 @@ test("kick removes a player and tells the host", async () => {
 	host.close();
 });
 
+test("rejoinByName: a phone without its token takes back a disconnected player with the same name", async () => {
+	const { host, ready } = await newGame("?rejoinByName=1");
+	const first = client(`/ws/play?code=${ready.code}&name=Sam`);
+	const w1 = await first.next("welcome");
+	await host.next("join");
+	// While Sam is still connected, another "Sam" is a new player.
+	const other = client(`/ws/play?code=${ready.code}&name=sam`);
+	const w2 = await other.next("welcome");
+	assert.notEqual(w2.id, w1.id);
+	assert.equal(w2.name, "sam 2");
+	await host.next("join");
+	// Sam drops out, then comes back with no token: same player.
+	first.close();
+	await host.next("status", (m) => m.id === w1.id && m.connected === false);
+	const back = client(`/ws/play?code=${ready.code}&name=SAM`);
+	const w3 = await back.next("welcome");
+	assert.equal(w3.id, w1.id);
+	assert.equal(w3.rejoin, true);
+	assert.equal((await host.next("join")).rejoin, true);
+	host.close();
+});
+
+test("without rejoinByName, a returning name without a token is a new player", async () => {
+	const { host, ready } = await newGame();
+	const first = client(`/ws/play?code=${ready.code}&name=Sam`);
+	const w1 = await first.next("welcome");
+	first.close();
+	await host.next("status", (m) => m.id === w1.id && m.connected === false);
+	const back = client(`/ws/play?code=${ready.code}&name=Sam`);
+	const w2 = await back.next("welcome");
+	assert.notEqual(w2.id, w1.id);
+	host.close();
+});
+
 test("theme can be picked by name and overridden inline", async () => {
 	const { host, ready } = await newGame("?theme=paper");
 	assert.equal(ready.theme.name, "paper");
