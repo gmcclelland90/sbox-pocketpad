@@ -108,6 +108,8 @@ export class Session {
 		/** @type {Map<string, any>} */
 		this.players = new Map();
 		this.defaultScreen = null;
+		/** What brand-new phones see first, if the game set one (e.g. a spectator screen once the game is full). */
+		this.joinScreen = null;
 		this.nextSlot = 1;
 		this.seq = 0;
 	}
@@ -207,6 +209,11 @@ export class Session {
 				this.broadcastPhones({ type: "theme", theme: this.theme });
 				return null;
 			}
+			case "joinScreen": {
+				// Only for phones joining from now on; nobody's current screen changes. null = the default screen.
+				this.joinScreen = msg.screen && typeof msg.screen === "object" ? msg.screen : null;
+				return null;
+			}
 			case "lobby": {
 				if (typeof msg.open === "boolean") this.lobbyOpen = msg.open;
 				if (Number.isInteger(msg.maxPlayers) && msg.maxPlayers > 0) this.maxPlayers = Math.min(msg.maxPlayers, this.maxPlayersCap ?? msg.maxPlayers);
@@ -292,6 +299,7 @@ export class Session {
 			bucketAt: Date.now(),
 			seq: 0,
 		};
+		if (this.joinScreen) player.screen = clone(this.joinScreen);
 		this.players.set(player.id, player);
 		this.welcome(player, false);
 		return { player };

@@ -52,6 +52,7 @@ session. A rejected connection gets `{type:"error", message}` and close code 400
 | `send` | `data`, `to` | arbitrary data for theme scripts (`PocketPad.onCustom`) |
 | `player` | `id`, `color`, `badge`, `avatar` | change a player's colour or badge |
 | `theme` | `theme` | change branding: `{use: "name", …overrides}` |
+| `joinScreen` | `screen` (or `null`) | what phones joining from now on see first; nobody's current screen changes. `null` = the default (last `show` to everyone) |
 | `lobby` | `open`, `maxPlayers` | open or close joining |
 | `kick` | `id`, `reason` | remove a player (a player who's already gone is ignored, no error) |
 | `end` | `reason` | end the session |

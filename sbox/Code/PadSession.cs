@@ -96,6 +96,9 @@ public sealed class PadSession : IDisposable
 	/// <summary>Connected (or reconnecting) players.</summary>
 	public IEnumerable<PadPlayer> ActivePlayers => _order.Where( p => p.IsConnected );
 
+	/// <summary>Everyone marked <see cref="PadPlayer.IsSpectator"/>.</summary>
+	public IEnumerable<PadPlayer> Spectators => _order.Where( p => p.IsSpectator );
+
 	public PadPlayer GetPlayer( string id ) => id != null && _players.TryGetValue( id, out var p ) ? p : null;
 
 	// ------------------------------------------------------------------ events
@@ -493,6 +496,23 @@ public sealed class PadSession : IDisposable
 		if ( player == null ) { Show( screen ); return; }
 		player.ClearInput();
 		Send( new JsonObject { ["type"] = "show", ["screen"] = screen.ToJson() }, One( player ) );
+	}
+
+	/// <summary>Show a screen to everyone who isn't a spectator (spectators keep their own screen).</summary>
+	public void ShowToPlayers( PadScreen screen ) => Show( screen, _order.Where( p => !p.IsSpectator ) );
+
+	/// <summary>Show a screen to every spectator.</summary>
+	public void ShowToSpectators( PadScreen screen ) => Show( screen, _order.Where( p => p.IsSpectator ) );
+
+	/// <summary>
+	/// The screen phones joining from now on see first, before your game reacts to the join. Use it when newcomers
+	/// won't be players (the game is full or already running): they get, say, a spectator screen straight away
+	/// instead of a flash of whatever everyone else was last shown. Nobody's current screen changes.
+	/// Null goes back to the default (the last <see cref="Show(PadScreen)"/> to everyone).
+	/// </summary>
+	public void SetJoinScreen( PadScreen screen )
+	{
+		Send( new JsonObject { ["type"] = "joinScreen", ["screen"] = screen?.ToJson() } );
 	}
 
 	/// <summary>Show a screen on some players' phones (e.g. one team).</summary>

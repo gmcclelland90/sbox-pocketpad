@@ -207,3 +207,12 @@ See [theming.md](theming.md) for everything a theme can do, including custom con
   (2 minutes by default) and the library reconnects to it. Messages sent while offline are queued.
 - If it comes back too late, `Ready(false)` fires with a new code and the old players are reported as left.
 - `Dispose()` (or destroying the `PadHost`) ends the session; phones go back to the join page with a message.
+
+## Players and spectators
+
+PocketPad doesn't decide who plays: every phone is a `PadPlayer`. If your game has an audience (phones that join once
+it's full, or mid-game), mark them with `player.IsSpectator = true` and use `ShowToPlayers(screen)` /
+`ShowToSpectators(screen)` so each group keeps its own screens. `SetJoinScreen(screen)` sets what phones joining from
+now on see first (e.g. a "You're in the audience" screen while the game is full), so they don't flash whatever the
+players were last shown; `SetJoinScreen(null)` goes back to normal.
+
