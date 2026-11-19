@@ -49,7 +49,7 @@ session. A rejected connection gets `{type:"error", message}` and close code 400
 | `player` | `id`, `color`, `badge`, `avatar` | change a player's colour or badge |
 | `theme` | `theme` | change branding: `{use: "name", …overrides}` |
 | `lobby` | `open`, `maxPlayers` | open or close joining |
-| `kick` | `id`, `reason` | remove a player |
+| `kick` | `id`, `reason` | remove a player (a player who's already gone is ignored, no error) |
 | `end` | `reason` | end the session |
 | `ping` | `t` | keep-alive / latency check |
 

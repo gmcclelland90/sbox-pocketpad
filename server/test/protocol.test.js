@@ -187,6 +187,15 @@ test("kick removes a player and tells the host", async () => {
 	host.send({ type: "kick", id: w.id, reason: "Bye" });
 	assert.equal((await p.next("ended")).message, "Bye");
 	assert.equal((await host.next("leave")).id, w.id);
+	// Kicking someone who's already gone is quietly ignored (no "unknown player" error back).
+	host.send({ type: "kick", id: w.id });
+	host.send({ type: "ping", t: 1 });
+	await host.next("pong"); // replies arrive in order, so an error would already be queued by now
+	const error = await Promise.race([
+		host.next("error").then(() => "error", () => "none"),
+		new Promise((r) => setTimeout(() => r("none"), 100)),
+	]);
+	assert.equal(error, "none");
 	host.close();
 });
 
