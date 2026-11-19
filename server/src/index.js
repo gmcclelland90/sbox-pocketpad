@@ -11,6 +11,7 @@ import QRCode from "qrcode";
 import { loadConfig } from "./config.js";
 import { SessionManager, normaliseCode } from "./session.js";
 import { ThemeStore } from "./themes.js";
+import { authFromRequest, verifySboxToken } from "./sboxauth.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const VERSION = JSON.parse(fs.readFileSync(path.join(here, "..", "package.json"), "utf8")).version;
@@ -121,6 +122,7 @@ export function createServer(overrides = {}) {
 			return json(res, 200, {
 				name: "pocketpad", version: VERSION, protocol: PROTOCOL,
 				hostKeyRequired: config.hostKeys.length > 0,
+				sboxAuthRequired: config.sboxAuth,
 				defaultTheme: config.defaultTheme, themes: themes.list(), maxPlayers: config.maxPlayers,
 			});
 		}
@@ -181,6 +183,7 @@ export function createServer(overrides = {}) {
 			ws.on("close", () => {
 				if (ws.overflowed) log.warn(`dropped a ${url.pathname === "/ws/host" ? "game" : "phone"} connection that fell more than ${config.maxBufferedKb} KB behind`);
 			});
+			ws.on("error", () => { });
 			if (url.pathname === "/ws/host") onHost(ws, url, req);
 			else onPhone(ws, url);
 		});
@@ -197,18 +200,37 @@ export function createServer(overrides = {}) {
 		try { return JSON.parse(data.toString()); } catch { return null; }
 	}
 
-	function onHost(ws, url, req) {
+	async function onHost(ws, url, req) {
 		const key = url.searchParams.get("key") ?? "";
 		if (config.hostKeys.length && !config.hostKeys.includes(key)) return reject(ws, "This server needs a host key.", 4003);
 
 		let session = sessions.byHostToken(url.searchParams.get("resume"));
 		const resumed = !!session;
+		let steamId = null;
+		if (!session && config.sboxAuth) {
+			const auth = authFromRequest(req);
+			const result = await verifySboxToken(auth, { url: config.sboxAuthUrl });
+			if (ws.readyState !== ws.OPEN) return;
+			if (result === "unavailable") {
+				// Not the game's fault. Close without an error so the library retries with a fresh token.
+				log.warn("s&box auth check failed: couldn't reach " + config.sboxAuthUrl);
+				return ws.close(1013, "auth check unavailable");
+			}
+			if (result !== "ok") return reject(ws, "This server only accepts games signed in to s&box. Turn on Send Auth Token on the PocketPad Host.", 4003);
+			steamId = auth.steamId;
+			// Someone else may have resumed or created in the meantime; look again.
+			session = sessions.byHostToken(url.searchParams.get("resume"));
+		}
 		if (!session) {
 			session = sessions.create({
 				theme: url.searchParams.get("theme") || null,
 				maxPlayers: Number(url.searchParams.get("maxPlayers")) || 0,
 			});
 			if (!session) return reject(ws, "The server is full. Try again later.", 4029);
+			if (steamId) {
+				session.hostSteamId = steamId;
+				log.info(`session ${session.code} created by Steam ID ${steamId}`);
+			}
 		}
 		const s = session;
 		s.attachHost(ws, { resumed, joinUrl: `${baseUrl(req)}/${s.code}` });
@@ -268,6 +290,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
 		app.log.info(`Phones join at http://${lan ?? "<this machine's IP>"}:${addr.port} (set PUBLIC_URL to override)`);
 	}
 	if (app.config.hostKeys.length) app.log.info(`Host keys required (${app.config.hostKeys.length} configured)`);
+	if (app.config.sboxAuth) app.log.info("s&box auth tokens required to create sessions");
 	app.log.info(`Themes: ${app.themes.list().join(", ")}`);
 	const stop = async (sig) => {
 		app.log.info(`${sig}: shutting down`);

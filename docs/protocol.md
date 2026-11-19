@@ -7,6 +7,10 @@ engine, or a phone client of your own; the s&box library and the bundled phone p
 
 `ws(s)://SERVER/ws/host?v=1[&key=HOST_KEY][&theme=NAME][&maxPlayers=N][&resume=HOST_TOKEN]`
 
+If the server has `SBOX_AUTH` on, a new session also needs `Authorization: <s&box auth token>` and
+`X-Steam-Id: <64-bit Steam ID>` request headers (not needed with a valid `resume`). A bad token gets close
+code 4003; if Facepunch's check can't be reached, the server closes with 1013 and you should retry.
+
 On connect the server sends:
 
 ```json

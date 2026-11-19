@@ -17,6 +17,9 @@ public sealed class PadHost : Component
 	/// <summary>Only needed if the server sets HOST_KEYS.</summary>
 	[Property] public string HostKey { get; set; }
 
+	/// <summary>Send an s&box auth token when creating a session. Needed for servers that set SBOX_AUTH. Only use with servers you trust.</summary>
+	[Property] public bool SendAuthToken { get; set; }
+
 	/// <summary>Theme folder on the server ("default", "paper", "neon", or your own).</summary>
 	[Property] public string Theme { get; set; }
 
@@ -57,6 +60,7 @@ public sealed class PadHost : Component
 		Session = new PadSession( ServerUrl, new PadSessionOptions
 		{
 			HostKey = HostKey,
+			SendAuthToken = SendAuthToken,
 			Theme = Theme,
 			MaxPlayers = MaxPlayers,
 			Debug = DebugLogging,

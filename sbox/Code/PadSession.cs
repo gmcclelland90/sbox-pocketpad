@@ -169,13 +169,40 @@ public sealed class PadSession : IDisposable
 
 		try
 		{
-			await socket.Connect( HostSocketUrl(), _cts.Token );
+			// Only new sessions need proving; resuming uses the host token the server gave us.
+			var headers = _hostToken == null && Options.SendAuthToken ? await AuthHeaders() : null;
+			if ( _socket != socket ) return;
+			if ( headers != null ) await socket.Connect( HostSocketUrl(), headers, _cts.Token );
+			else await socket.Connect( HostSocketUrl(), _cts.Token );
 		}
 		catch ( Exception e )
 		{
 			if ( _socket != socket ) return;
 			Post( () => Error?.Invoke( $"Couldn't reach the PocketPad server at {ServerUrl}: {e.Message}" ) );
 			ScheduleReconnect();
+		}
+	}
+
+	/// <summary>An s&box auth token and our Steam ID, or null if we couldn't get a token (e.g. not signed in).</summary>
+	private static async Task<Dictionary<string, string>> AuthHeaders()
+	{
+		try
+		{
+			var get = Sandbox.Services.Auth.GetToken( "pocketpad" );
+			// GetToken ignores cancellation, so don't let a slow backend hold up the connection forever.
+			if ( await Task.WhenAny( get, Task.Delay( 5000 ) ) != get ) return null;
+			var token = await get;
+			if ( string.IsNullOrEmpty( token ) ) return null;
+			return new Dictionary<string, string>
+			{
+				{ "Authorization", token },
+				{ "X-Steam-Id", Game.SteamId.ToString() },
+			};
+		}
+		catch ( Exception e )
+		{
+			Log.Warning( $"[PocketPad] Couldn't get an s&box auth token: {e.Message}" );
+			return null;
 		}
 	}
 

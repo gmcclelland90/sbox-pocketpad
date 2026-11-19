@@ -37,6 +37,8 @@ Needs Node 20 or newer.
 | `HOST` | `0.0.0.0` | Interface to bind |
 | `PUBLIC_URL` | (from request) | Address phones use, shown to games as `JoinUrl`. Set this behind a proxy or in Docker |
 | `HOST_KEYS` | (none) | Comma-separated keys. When set, games must send one (`PadHost.HostKey`) to create sessions. Recommended for public servers |
+| `SBOX_AUTH` | `false` | Only let games signed in to s&box create sessions. See [s&box auth tokens](#sbox-auth-tokens). Recommended for public servers |
+| `SBOX_AUTH_URL` | Facepunch's | Token check endpoint. Only change it for testing |
 | `DEFAULT_THEME` | `default` | Theme for the plain join page and for games that don't pick one |
 | `THEMES_DIR` | `/themes` | Folder of extra themes |
 | `MAX_SESSIONS` | `500` | Concurrent sessions |
@@ -86,10 +88,27 @@ location / {
 
 Set `PUBLIC_URL=https://pad.example.com` (or `TRUST_PROXY=true`).
 
+## s&box auth tokens
+
+`HOST_KEYS` ship inside your game, so anyone can dig one out and create sessions on your server. With
+`SBOX_AUTH=true`, the server instead asks Facepunch to confirm that a game creating a session is a real
+Steam user running s&box ([auth tokens](https://sbox.game/dev/doc/services/auth-tokens)):
+
+1. Turn on **Send Auth Token** on the PocketPad Host (`PadSessionOptions.SendAuthToken`). The library calls
+   `Sandbox.Services.Auth.GetToken(...)` and sends the token (`Authorization` header) and the player's Steam ID
+   (`X-Steam-Id` header) when it opens the host socket.
+2. The server posts them to `https://public.facepunch.com/sbox/auth/token` and only creates the session if
+   Facepunch answers `ok` for that Steam ID. The Steam ID is logged with the new session's code.
+3. A game resuming its own session doesn't need a new token. If Facepunch can't be reached, the server closes
+   the socket with `1013` and the library tries again.
+
+Phones aren't in s&box, so this only applies to games. It works alongside `HOST_KEYS` and the rate limits.
+Leave it off for local testing.
+
 ## Health and monitoring
 
 - `GET /healthz` returns `{ok, version, sessions}`; the Docker image has a built-in healthcheck on it.
-- `GET /api/v1/info` lists version, protocol, themes, and whether a host key is required.
+- `GET /api/v1/info` lists version, protocol, themes, and whether a host key or s&box auth is required.
 
 ## Scaling
 
