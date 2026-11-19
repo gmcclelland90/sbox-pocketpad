@@ -59,11 +59,14 @@ session. A rejected connection gets `{type:"error", message}` and close code 400
 {
   "title": "Race!", "subtitle": "Go go go", "round": "Round 2/5",
   "timer": 30, "timerTicks": true,
-  "layout": "stack | row | grid", "scroll": false, "background": "#202",
+  "layout": "stack | row | grid", "scroll": false, "background": "#202", "inputDelay": 800,
   "sensors": { "tilt": true | { "range": 35, "interval": 50 }, "shake": true },
   "elements": [ ELEMENT… ]
 }
 ```
+
+`inputDelay` (milliseconds, up to 3000): the phone ignores input from the screen's controls for that long after
+showing it, so a tap meant for the previous screen can't land on a button that just appeared. Sensors still report.
 
 Every element: `type`, `id`, `flex`, `color`, `textColor`, `disabled`, `hidden`, `class`. Then:
 

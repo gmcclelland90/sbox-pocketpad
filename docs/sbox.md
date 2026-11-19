@@ -68,7 +68,8 @@ player.Show( screen );                     // same as above
 
 Screen options: `Title`, `Subtitle`, `Round` (small top-bar text), `Timer` (seconds, the phone counts
 down and ticks for the last three), `Layout` (`"stack"` default, `"row"` for side by side, `"grid"`),
-`Scroll` (for forms and drawing), `Background` (CSS), `Tilt`, `TiltRange`, `Shake`.
+`Scroll` (for forms and drawing), `Background` (CSS), `Tilt`, `TiltRange`, `Shake`, and `InputDelay` (seconds the phone
+ignores taps after the screen appears, so a leftover tap from the last screen can't hit a new button; up to 3).
 
 Elements stack top to bottom and interactive ones grow to fill the screen. Use `Flex` to change the
 share of space, and `PadRow` / `PadColumn` to nest:

@@ -276,6 +276,9 @@
 
 	function renderScreen(screen) {
 		state.screen = screen;
+		// Ignore taps for a moment after a new screen appears, if the game asks (fingers still mashing the last one).
+		const delay = Math.min(3000, Math.max(0, Number(screen.inputDelay) || 0));
+		state.inputAfter = performance.now() + delay;
 		unmountAll();
 		$("title").textContent = screen.title || "";
 		$("subtitle").textContent = screen.subtitle || "";
@@ -347,6 +350,7 @@
 		return {
 			send: (ev, data) => {
 				if (def.disabled) return false;
+				if (state.inputAfter && performance.now() < state.inputAfter) return false;
 				return sendInput(def.id || def.type, ev, data);
 			},
 			haptic: (h) => haptic(h ?? def.haptic),
