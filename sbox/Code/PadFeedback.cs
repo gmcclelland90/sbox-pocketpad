@@ -95,6 +95,9 @@ public sealed class PadTheme
 	/// <summary>Extra CSS injected into the page.</summary>
 	public string Css { get; set; }
 
+	/// <summary>A stylesheet URL (https or data: URL) loaded instead of the base theme's own stylesheet.</summary>
+	public string Stylesheet { get; set; }
+
 	/// <summary>Hide the "Powered by PocketPad" line.</summary>
 	public bool HidePoweredBy { get; set; }
 
@@ -115,6 +118,7 @@ public sealed class PadTheme
 		if ( Text != null ) o["text"] = PadJson.ToNode( Text );
 		if ( Sounds != null ) o["sounds"] = PadJson.ToNode( Sounds );
 		PadJson.Set( o, "css", Css );
+		PadJson.Set( o, "stylesheet", Stylesheet );
 		if ( HidePoweredBy ) o["poweredBy"] = false;
 		return o;
 	}

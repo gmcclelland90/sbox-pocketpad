@@ -45,7 +45,7 @@ your LAN address and prints where phones join. Plain `npm start` also works on a
 | `SBOX_AUTH` | `false` | Only let games signed in to s&box create sessions. See [s&box auth tokens](#sbox-auth-tokens). Recommended for public servers |
 | `SBOX_AUTH_URL` | Facepunch's | Token check endpoint. Only change it for testing |
 | `DEFAULT_THEME` | `default` | Theme for the plain join page and for games that don't pick one |
-| `THEMES_DIR` | `/themes` | Folder of extra themes |
+| `THEMES_DIR` | `/themes` | Folder of extra themes. Several folders can be listed (`;` on Windows, `:` elsewhere); later ones win |
 | `MAX_SESSIONS` | `500` | Concurrent sessions |
 | `MAX_PLAYERS` | `100` | Phones per session, players and spectators/audience together (games can ask for fewer with `MaxPlayers`) |
 | `HOST_GRACE_SECONDS` | `120` | How long a session survives without its game connected |

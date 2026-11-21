@@ -10,7 +10,7 @@ import { WebSocketServer } from "ws";
 import QRCode from "qrcode";
 import { loadConfig } from "./config.js";
 import { SessionManager, normaliseCode } from "./session.js";
-import { ThemeStore } from "./themes.js";
+import { ThemeStore, themeDirs } from "./themes.js";
 import { authFromRequest, verifySboxToken } from "./sboxauth.js";
 import { RateLimiter } from "./ratelimit.js";
 import { ProxyTrust } from "./proxy.js";
@@ -62,7 +62,7 @@ function lanAddress() {
 export function createServer(overrides = {}) {
 	const config = loadConfig(overrides);
 	const log = overrides.log ?? makeLogger(config.logLevel);
-	const themes = new ThemeStore({ dirs: [config.builtinThemesDir, config.themesDir], defaultTheme: config.defaultTheme, log });
+	const themes = new ThemeStore({ dirs: [config.builtinThemesDir, ...themeDirs(config.themesDir)], defaultTheme: config.defaultTheme, log });
 	const sessions = new SessionManager({ config, log, resolveTheme: (t) => themes.compose(t) });
 	const inDocker = fs.existsSync("/.dockerenv");
 	const proxies = new ProxyTrust({ trusted: config.trustedProxies, trustAll: config.trustProxy });

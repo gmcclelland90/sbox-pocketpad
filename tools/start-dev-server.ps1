@@ -1,6 +1,9 @@
 # Starts a PocketPad server for local development on your network (plain http).
 #
-#   powershell -ExecutionPolicy Bypass -File tools\start-dev-server.ps1 [-Port 8080] [-MaxPlayers 100] [-Theme paper] [-RequireAuth]
+#   powershell -ExecutionPolicy Bypass -File tools\start-dev-server.ps1 [-Port 8080] [-MaxPlayers 100] [-Theme paper] [-ThemesDir C:\mygame\PhoneThemes] [-RequireAuth]
+#
+# -ThemesDir: a folder of your own themes (one subfolder per theme), kept in your game's repo. Several folders can be
+# given separated by ";". -Theme then picks the theme phones see before a game says otherwise.
 #
 # - Installs the server's dependencies on first run.
 # - Stops early with a clear message if the port is already taken.
@@ -16,6 +19,7 @@ param(
     [int]$Port = 8080,
     [int]$MaxPlayers = 100,
     [string]$Theme = "",
+    [string]$ThemesDir = "",
     [switch]$RequireAuth
 )
 $ErrorActionPreference = "Stop"
@@ -43,12 +47,16 @@ if (-not $env:PUBLIC_URL) {
 $env:PORT = "$Port"
 if (-not $env:MAX_PLAYERS) { $env:MAX_PLAYERS = "$MaxPlayers" }
 if ($Theme -and -not $env:DEFAULT_THEME) { $env:DEFAULT_THEME = $Theme }
+if ($ThemesDir) {
+    $env:THEMES_DIR = (($ThemesDir -split ';') | Where-Object { $_ } | ForEach-Object { (Resolve-Path -LiteralPath $_).Path }) -join ';'
+}
 if ($RequireAuth) { $env:SBOX_AUTH = "true" }
 
 Write-Host ""
 Write-Host "  Phones join at:   $($env:PUBLIC_URL)" -ForegroundColor Green
 Write-Host "  Game connects to: http://localhost:$Port"
 Write-Host "  Max phones/room:  $($env:MAX_PLAYERS)"
+if ($env:THEMES_DIR) { Write-Host "  Extra themes:     $($env:THEMES_DIR)" }
 Write-Host "  s&box auth:       $(if ($env:SBOX_AUTH -match '^(1|true|yes)$') { 'required' } else { 'off' })"
 Write-Host "  Ctrl+C to stop."
 Write-Host ""
