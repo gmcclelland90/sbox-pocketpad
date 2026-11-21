@@ -8,6 +8,23 @@ as a built-in theme replaces it, so `/themes/default` rebrands the plain join pa
 Games pick a theme by name (`PadHost.Theme`, or `?theme=` when connecting) and can override parts of it
 inline with `session.SetTheme(...)`. Changes to `theme.json` are picked up without restarting.
 
+## Keeping your game's theme in your game
+
+Your theme doesn't need to live in PocketPad. Keep the folder in your game's repo and point the server at it:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\start-dev-server.ps1 -ThemesDir C:\path	o\mygame\PhoneThemes -Theme mygame
+```
+
+(`THEMES_DIR=/path/to/mygame/PhoneThemes DEFAULT_THEME=mygame tools/start-dev-server.sh` on macOS/Linux, or mount
+the folder at `/themes` in Docker.) `THEMES_DIR` can list several folders, separated by `;` on Windows and `:`
+elsewhere; when two have a theme of the same name, the later folder wins. A theme folder can carry everything:
+`theme.json`, a stylesheet, a script with custom controls, fonts, sounds and images.
+
+Without a server-side folder, a game can still restyle phones from s&box alone with `session.SetTheme(...)`:
+colours, font and `FontUrl`, inline `Css`, a `Stylesheet` URL, logo, background, sounds and text, all as `https://`
+or `data:` URLs. Only scripts (custom controls) need a theme folder.
+
 ## theme.json
 
 ```json
@@ -53,7 +70,7 @@ Every key is optional. Relative paths (`logo`, `background`, `stylesheet`, `scri
 | `radius` | Corner roundness in px |
 | `font`, `fontUrl` | CSS font-family, and an optional font file to load for it |
 | `background` | Background image |
-| `stylesheet`, `css` | Extra CSS (a file, or inline) |
+| `stylesheet`, `css` | Extra CSS (a file, or inline). Games can also send a `Stylesheet` URL with `SetTheme` |
 | `sounds` | Name to sound file. Overrides built-in synth sounds with the same name, or adds new ones for `PadFeedback.Sound` and `PadButton.Sound` |
 | `text` | Replace any of the page's words (translations too) |
 | `script` | JavaScript that adds custom controls (theme folders only; games can't inject scripts) |

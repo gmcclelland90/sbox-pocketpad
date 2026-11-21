@@ -43,7 +43,11 @@ export function loadConfig(overrides = {}) {
 		sboxAuthUrl: process.env.SBOX_AUTH_URL || "https://public.facepunch.com/sbox/auth/token",
 		/** Theme used when a game doesn't pick one, and for the plain join page. */
 		defaultTheme: process.env.DEFAULT_THEME || "default",
-		/** Extra theme folders (each subfolder is a theme). Mount your branding here in Docker. */
+		/**
+		 * Extra theme folders (each subfolder is a theme). Mount your branding here in Docker. Several folders can
+		 * be listed with the platform's path separator (";" on Windows, ":" elsewhere), so a game can keep its own
+		 * theme in its own repo; later folders win when two have a theme of the same name.
+		 */
 		themesDir: process.env.THEMES_DIR || "/themes",
 		/** Built-in themes shipped with the server. */
 		builtinThemesDir: path.join(here, "..", "themes"),

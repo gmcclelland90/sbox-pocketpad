@@ -199,7 +199,9 @@ session.SetTheme( new PadTheme
 } );
 ```
 
-See [theming.md](theming.md) for everything a theme can do, including custom controls.
+A game can bring its whole look this way (`Font`/`FontUrl`, `Css`, `Stylesheet`, `Logo`, `Background`, `Sounds`, as
+`https://` or `data:` URLs), or keep a theme folder in its own repo and start the server with `-ThemesDir`. See
+[theming.md](theming.md#keeping-your-games-theme-in-your-game) for everything a theme can do, including custom controls.
 
 ## Connection behaviour
 

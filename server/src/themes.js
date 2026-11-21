@@ -91,6 +91,12 @@ export class ThemeStore {
 	}
 }
 
+/** THEMES_DIR as a list of folders: an array, or one string split on the platform's path separator. */
+export function themeDirs(value) {
+	const list = Array.isArray(value) ? value : String(value ?? "").split(path.delimiter);
+	return list.map((d) => String(d).trim()).filter(Boolean);
+}
+
 function resolveAsset(value, base) {
 	if (typeof value !== "string" || !value) return value ?? null;
 	if (/^(https?:|data:|\/)/i.test(value)) return value;
