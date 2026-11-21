@@ -13,7 +13,7 @@ inline with `session.SetTheme(...)`. Changes to `theme.json` are picked up witho
 Your theme doesn't need to live in PocketPad. Keep the folder in your game's repo and point the server at it:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tools\start-dev-server.ps1 -ThemesDir C:\path	o\mygame\PhoneThemes -Theme mygame
+powershell -ExecutionPolicy Bypass -File tools\start-dev-server.ps1 -ThemesDir C:\path\to\mygame\PhoneThemes -Theme mygame
 ```
 
 (`THEMES_DIR=/path/to/mygame/PhoneThemes DEFAULT_THEME=mygame tools/start-dev-server.sh` on macOS/Linux, or mount
