@@ -43,6 +43,12 @@ const MIME = {
 	".txt": "text/plain; charset=utf-8",
 };
 
+/** Theme colour names and the CSS variables they set (the same list as COLOR_VARS in public/pad.js). */
+const FIRST_PAINT_VARS = {
+	bg: "--bg", surface: "--surface", text: "--text", muted: "--muted", accent: "--accent", accentText: "--accent-text",
+	button: "--button", buttonText: "--button-text", border: "--border", danger: "--danger", success: "--success",
+};
+
 function makeLogger(level) {
 	const order = { debug: 0, info: 1, warn: 2, error: 3 };
 	const min = order[level] ?? 1;
@@ -122,6 +128,50 @@ export function createServer(overrides = {}) {
 		});
 	}
 
+	/**
+	 * The phone page, with its theme (the room's, or the default) written into it so the first paint is already
+	 * themed: no flash of the built-in look while the theme is fetched.
+	 */
+	function servePage(req, res, code) {
+		let theme = null;
+		const c = code && normaliseCode(code);
+		if (c) {
+			const s = lookupSession(req, c);
+			if (s && s !== "limited") theme = s.theme;
+		}
+		theme ??= themes.get(config.defaultTheme);
+		const attr = (v) => String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+		// The theme's colours and font as CSS, so the page is right even before pad.js has loaded. The screens stay
+		// hidden until pad.js has filled in the theme's text and logo (or 3 s pass, if it never loads); pad.js
+		// removes this <style> once it applies the theme itself. Values are checked so nothing can break out of it.
+		const safe = (v) => typeof v === "string" && !/[<>{};"\\]/.test(v);
+		let vars = "";
+		for (const [k, v] of Object.entries(theme.colors || {})) if (FIRST_PAINT_VARS[k] && safe(v)) vars += `${FIRST_PAINT_VARS[k]}:${v};`;
+		if (typeof theme.radius === "number") vars += `--radius:${theme.radius}px;`;
+		else if (safe(theme.radius)) vars += `--radius:${theme.radius};`;
+		if (safe(theme.font)) vars += `--font:${theme.fontUrl ? `"PocketPadThemeFont", ${theme.font}` : theme.font};`;
+		if (safe(theme.background)) vars += `--bg-image:url("${theme.background}");`;
+		let css = `:root{${vars}}`;
+		if (safe(theme.fontUrl)) css += `@font-face{font-family:"PocketPadThemeFont";src:url("${theme.fontUrl}");font-display:block}`;
+		css += "body>main{visibility:hidden;animation:pp-reveal 0s 3s forwards}@keyframes pp-reveal{to{visibility:visible}}";
+		let head = `<style id="theme-first-paint">${css}</style>\n`;
+		head += `\t<script id="pocketpad-theme" type="application/json">${JSON.stringify(theme).replace(/</g, "\\u003c")}</script>\n`;
+		if (safe(theme.fontUrl)) head +=`\t<link rel="preload" as="font" href="${attr(theme.fontUrl)}" crossorigin>\n`;
+		let html;
+		try { html = fs.readFileSync(path.join(config.publicDir, "index.html"), "utf8"); } catch { return json(res, 404, { error: "not found" }); }
+		html = html
+			.replace('id="theme-stylesheet" rel="stylesheet" href="data:text/css,"', `id="theme-stylesheet" rel="stylesheet" href="${attr(theme.stylesheet || "data:text/css,")}"`)
+			.replace("</head>", `\t${head}</head>`);
+		const body = Buffer.from(html);
+		res.writeHead(200, {
+			"content-type": MIME[".html"],
+			"content-length": body.length,
+			"cache-control": "no-cache",
+			"x-content-type-options": "nosniff",
+		});
+		res.end(req.method === "HEAD" ? undefined : body);
+	}
+
 	/** Resolve a request path inside root, refusing anything that escapes it. */
 	function safeJoin(root, rel) {
 		const full = path.resolve(root, "." + path.posix.normalize("/" + rel));
@@ -186,7 +236,7 @@ export function createServer(overrides = {}) {
 		}
 
 		// Join links: https://host/ABCD opens the controller with the code filled in.
-		if (p === "/" || /^\/[A-Za-z]{4}\/?$/.test(p)) return serveFile(res, path.join(config.publicDir, "index.html"));
+		if (p === "/" || /^\/[A-Za-z]{4}\/?$/.test(p)) return servePage(req, res, p.length > 1 ? p.slice(1, 5) : url.searchParams.get("code"));
 
 		const file = safeJoin(config.publicDir, p);
 		if (!file) return json(res, 404, { error: "not found" });

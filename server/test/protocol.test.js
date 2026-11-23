@@ -297,3 +297,24 @@ test("http endpoints: health, session info, qr, static files, no path traversal"
 	assert.equal((await get("/..%2Fpackage.json")).status, 404);
 	host.close();
 });
+
+test("the phone page arrives already themed, so it doesn't flash the default look", async () => {
+	const { host, ready } = await newGame("?theme=paper");
+	const page = async (p) => {
+		const html = await (await fetch(`http://${base}${p}`)).text();
+		return { html, theme: JSON.parse(html.match(/<script id="pocketpad-theme" type="application\/json">(.*?)<\/script>/)[1]) };
+	};
+	const room = await page(`/${ready.code}`);
+	assert.equal(room.theme.name, "paper");
+	assert.match(room.html, /<style id="theme-first-paint">:root\{--bg:/);
+	assert.equal((await page("/")).theme.name, "default");
+	assert.equal((await page("/QQQQ")).theme.name, "default");
+
+	// A game's inline theme can't break out of the page.
+	host.send({ type: "theme", theme: { use: "paper", title: "</script><b>x", colors: { bg: "red}</style><b>" } } });
+	await new Promise((r) => setTimeout(r, 100));
+	const evil = await page(`/${ready.code}`);
+	assert.equal(evil.theme.title, "</script><b>x");
+	assert.doesNotMatch(evil.html, /<b>/);
+	host.close();
+});
