@@ -72,13 +72,18 @@
 			connect(c, n, store.get("pocketpad:session:" + c)?.token);
 		});
 
-		applyTheme(null);
-		fetch("/api/v1/info").then((r) => r.json()).then((info) => {
-			if (!state.theme && info.defaultTheme) loadThemeByName(info.defaultTheme);
-		}).catch(() => { });
+		// The server writes the theme into the page, so it's in place before the first paint.
+		let served = null;
+		try { served = JSON.parse($("pocketpad-theme")?.textContent || "null"); } catch { }
+		applyTheme(served);
+		if (!served) {
+			fetch("/api/v1/info").then((r) => r.json()).then((info) => {
+				if (!state.theme && info.defaultTheme) loadThemeByName(info.defaultTheme);
+			}).catch(() => { });
+		}
 
 		if (code) {
-			previewTheme(code);
+			if (!served) previewTheme(code);
 			// Refreshed mid-game? Rejoin as the same player.
 			const saved = store.get("pocketpad:session:" + code);
 			if (saved?.token) return connect(code, saved.name || nameInput.value, saved.token);
@@ -236,10 +241,13 @@
 		document.body.dataset.theme = t.name || "default";
 
 		let css = "";
-		if (t.fontUrl) css += `@font-face { font-family: "PocketPadThemeFont"; src: url("${t.fontUrl}"); font-display: swap; }\n`;
+		if (t.fontUrl) css += `@font-face { font-family: "PocketPadThemeFont"; src: url("${t.fontUrl}"); font-display: block; }\n`;
 		if (typeof t.css === "string") css += t.css;
-		$("theme-css").textContent = css;
-		$("theme-stylesheet").href = t.stylesheet || "data:text/css,";
+		// Only touch the styles when they change, so re-applying the same theme doesn't reload anything.
+		if ($("theme-css").textContent !== css) $("theme-css").textContent = css;
+		$("theme-first-paint")?.remove();
+		const sheet = t.stylesheet || "data:text/css,";
+		if ($("theme-stylesheet").getAttribute("href") !== sheet) $("theme-stylesheet").setAttribute("href", sheet);
 		if (t.script && !state.loadedScripts.has(t.script)) {
 			state.loadedScripts.add(t.script);
 			const s = document.createElement("script");
